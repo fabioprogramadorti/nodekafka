@@ -1,0 +1,4 @@
+*.json
+.history/
+node_modules
+yarn
