@@ -1,5 +1,5 @@
 import express from 'express';
-import { kafka } from 'kafkajs'
+import { kafka, logLevel } from 'kafkajs'
 import routes from './routes'
 
 const app = express();
@@ -12,10 +12,12 @@ const kafka = new Kafka({
     retry: {
       initialRetryTome: 300,
       retries: 10 
-    }
+    },
+    logLevel: logLevel.NOTHING,
   })
 
   const producer = kafka.producer()
+  const consumer = kafka.consumer({ groupId: 'certificate-group' })
 
 
   
@@ -31,7 +33,16 @@ const kafka = new Kafka({
 
 async function run(){
     await producer.connect()
-        
+    await consumer.connect()
+    await consumer.run()
+    await consumer.subscribe({ topic: 'certification-response' });
+    
+    await consumer.run({
+      eachMessage: async({ topic, partition, message }) =>{
+        console.log('Resposta', message);
+      },
+    })
+
     app.listen(3333);
 }
 
